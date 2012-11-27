@@ -1,9 +1,37 @@
 
 function serialize(anything){
-    return anything.toString();
+    switch (typeof anything) {
+        case "number": return 'num>'+anything.toString();
+        case "string": return 'str>'+anything.toString();
+        case "boolean": return 'bool>'+anything.toString();
+        case "undefined": return 'undef>';
+        case "function": return 'func>'+anything.toString();
+        case "object":
+        default:
+            if(anything===null) return 'null>';
+            return anything.toString();
+    }
 }
-function deserialize(aString){
-    return Number(aString);
+function deserialize(serializedContent){
+    var typeVal = serializedContent.split('>');
+    var type = typeVal[0];
+    var valeur = serializedContent.substr(serializedContent.indexOf('>')+1);
+    switch (type) {
+        case "num": return Number(valeur);
+        case "str": return valeur;
+        case "bool": return (valeur=='true')?true:false;
+        case "undef": return undefined;
+        case "null": return null;
+        case "func":
+            if( valeur.indexOf('[native code]') > -1 ){
+                valeur = valeur.split('function ')[1].split('(')[0]; // extraction du nom de la fonction native
+            }
+            var func;
+            eval('func = '+valeur);
+            return func;
+        default:
+            return valeur;
+    }
 }
 
 

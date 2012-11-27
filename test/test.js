@@ -11,22 +11,56 @@ describe("Fonctions générique", function() {
     });
 });
 
+
+function serialisationTest(testValue){
+        var donneeDeTest = testValue;
+        var temoin = donneeDeTest;
+        var donneeConvertieEnTexte = serialize(donneeDeTest);
+        expect(typeof donneeConvertieEnTexte).toBe('string');
+        var donneeRestauree = deserialize(donneeConvertieEnTexte);
+        expect(donneeRestauree).toBe(temoin);    
+}
+function serialisationTestFonction(testFunction, params){
+        var donneeDeTest = testFunction;
+        var temoin = donneeDeTest;
+        var donneeConvertieEnTexte = serialize(donneeDeTest);
+        expect(typeof donneeConvertieEnTexte).toBe('string');
+        var donneeRestauree = deserialize(donneeConvertieEnTexte);
+        expect(donneeRestauree(params)).toBe(temoin(params));    
+}
 describe("serialisation / déserialisation", function() {
     it("gère les entiers", function() {
-        var donneeDeTest = 5;
-        var temoin = donneeDeTest;
-        var donneeConvertieEnTexte = serialize(donneeDeTest);
-        expect(typeof donneeConvertieEnTexte).toBe('string');
-        var donneeRestauree = deserialize(donneeConvertieEnTexte);
-        expect(donneeRestauree).toBe(temoin);
-
-        var donneeDeTest = -6548854821486;
-        var temoin = donneeDeTest;
-        var donneeConvertieEnTexte = serialize(donneeDeTest);
-        expect(typeof donneeConvertieEnTexte).toBe('string');
-        var donneeRestauree = deserialize(donneeConvertieEnTexte);
-        expect(donneeRestauree).toBe(temoin);
+        serialisationTest(5);
+        serialisationTest(-6548854821486);
     });
+    it("gère les flotants", function() {
+        serialisationTest(.2);
+        serialisationTest(-654.00099);
+    });
+    it("gère les chaines de caractères", function() {
+        serialisationTest('a');
+        serialisationTest("une chaine avec des caractères un peu plus compiqué comme : \"/'()&$£¤*!§?²@ëâ<>{}[]| et qui à le mauvais gout de finir par \\");
+    });
+    it("gère les booléens", function() {
+        serialisationTest(true);
+        serialisationTest(false);
+    });
+    it("gère les undefined", function() {
+        serialisationTest(undefined);
+    });
+    it("gère les null", function() {
+        serialisationTest(null);
+    });
+    it("gère les fonctions", function() {
+        serialisationTestFonction(function(){return 5;});
+        function incrementeur(num){return num+1;}
+        serialisationTestFonction(incrementeur,5);
+        
+        console.log(serialize(Math.round));
+        serialisationTestFonction(Math.round,0.5);
+    });
+    
+    
 
 /*
     it("serialise les tableaux", function() {

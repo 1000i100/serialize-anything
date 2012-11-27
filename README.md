@@ -6,11 +6,12 @@ Cela ce fait au prix d'une perte de lisibilité en ajoutant certains préfix et 
 
 
 Le but premier est que vous puissiez stocker n'importe quoi (anything) sous forme de chaine de carracètre et le restaurer à l'identique.
-'''
-var str = serialize(anything);
-console.log(typeof str); // "string"
-var restoreAnything = deserialize(str);
-'''
+
+
+    var str = serialize(anything);
+    console.log(typeof str); // "string"
+    var restoreAnything = deserialize(str);
+
 restoreAnything a le même contenu/comportement qu'anything quel que soit son type d'origine et sa complexité.
 
 Le script à été conçu dans l'optique de pouvoir stocker des objets dynamique complexe en localstorage.

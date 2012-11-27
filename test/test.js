@@ -17,6 +17,7 @@ function serialisationTest(testValue){
         var temoin = donneeDeTest;
         var donneeConvertieEnTexte = serialize(donneeDeTest);
         expect(typeof donneeConvertieEnTexte).toBe('string');
+        console.log(donneeConvertieEnTexte);
         var donneeRestauree = deserialize(donneeConvertieEnTexte);
         expect(donneeRestauree).toBe(temoin);    
 }
@@ -51,41 +52,32 @@ describe("serialisation / déserialisation", function() {
     it("gère les null", function() {
         serialisationTest(null);
     });
-    it("gère les fonctions", function() {
+    it("gère les fonctions utilisateurs", function() {
         serialisationTestFonction(function(){return 5;});
         function incrementeur(num){return num+1;}
         serialisationTestFonction(incrementeur,5);
+    });
+    it("gère les fonctions native", function() {
+        serialisationTestFonction(escape,"j'ai compris >< ");
         
-        console.log(serialize(Math.round));
-        serialisationTestFonction(Math.round,0.5);
+        // mais pas les methode statique native
+        //serialisationTestFonction(Math.round,0.5);
     });
     
-    
-
-/*
-    it("serialise les tableaux", function() {
-        var donneeDeTest = new Array(1, 5, 3);
-        donneeDeTest['clef']='valeur';
-        var temoin = donneeDeTest;
-        var donneeConvertieEnTexte = serialise(donneeDeTest);
-        console.log(donneeConvertieEnTexte);
-        var donneeRestauree = deserialise(donneeConvertieEnTexte);
-        expect(donneeRestauree[0]).toBe(temoin[0]);
-        expect(donneeRestauree[1]).toBe(temoin[1]);
-        expect(donneeRestauree[2]).toBe(temoin[2]);
-        expect(donneeRestauree['clef']).toBe(temoin['clef']);
+    //FIXME: corriger les test pour les tableaux
+    it("gère les tableaux simple", function() {
+        serialisationTest([1,'cinq',null]);
     });
-    it("déserialise les tableaux", function() {
-        var donneeDeTest = new Array(1, 5, 3);
-        donneeDeTest['clef']='valeur';
-        var temoin = donneeDeTest;
-        var donneeConvertieEnTexte = serialise(donneeDeTest);
-        console.log(donneeConvertieEnTexte);
-        var donneeRestauree = deserialise(donneeConvertieEnTexte);
-        expect(donneeRestauree[0]).toBe(temoin[0]);
-        expect(donneeRestauree[1]).toBe(temoin[1]);
-        expect(donneeRestauree[2]).toBe(temoin[2]);
-        expect(donneeRestauree['clef']).toBe(temoin['clef']);
+    it("gère les tableaux associatif", function() {
+        var tableauAssociatif = new Array();
+        tableauAssociatif['test'] = 'test';
+        tableauAssociatif['un?'] = 'deux!';
+        serialisationTest(tableauAssociatif);
     });
-*/
+    it("gère les tableaux imbriqué/multidimensionnel/complexe", function() {
+        serialisationTest([1,'cinq',[3,2,[function(){return 5;},escape,null]]]);
+    });
+    it("gère les expression régulière", function() {
+        serialisationTest(/^$/gi);
+    });
 });

@@ -5,11 +5,21 @@ function serialize(anything){
         case "string": return 'str>'+anything.toString();
         case "boolean": return 'bool>'+anything.toString();
         case "undefined": return 'undef>';
-        case "function": return 'func>'+anything.toString();
+        case "function": 
+            anything = anything.toString();
+             if( anything.indexOf('[native code]') > -1 ){
+                // pour les fonctions native, le nom suffit.
+                anything = anything.split('function ')[1].split('(')[0];
+            }
+            return 'func>'+anything;
         case "object":
         default:
             if(anything===null) return 'null>';
-            return anything.toString();
+            var encodedMembers = [];
+            for (i in anything){
+                encodedMembers.push(i+':'+Base64.encode(serialize(anything[i])));
+            }
+            return anything.constructor.name+'>'+encodedMembers.join(',');
     }
 }
 function deserialize(serializedContent){
@@ -23,14 +33,22 @@ function deserialize(serializedContent){
         case "undef": return undefined;
         case "null": return null;
         case "func":
-            if( valeur.indexOf('[native code]') > -1 ){
-                valeur = valeur.split('function ')[1].split('(')[0]; // extraction du nom de la fonction native
-            }
             var func;
             eval('func = '+valeur);
             return func;
+        case "obj":
         default:
-            return valeur;
+            var objType;
+            eval('objType = '+type);
+            var obj = new objType();
+            var encodedMembers = valeur.split(',');
+            for (i in encodedMembers){
+                var splittedMember = encodedMembers[i].split(':');
+                var key = splittedMember[0];
+                var value = Base64.decode(splittedMember[1]);
+                obj[key]=deserialize(value);
+            }
+            return obj;
     }
 }
 

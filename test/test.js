@@ -12,16 +12,25 @@ describe("Fonctions générique", function() {
 });
 
 
-function serialisationTest(testValue){
+function serialisationTest(testValue, depthLimit){
         var donneeDeTest = testValue;
         var temoin = donneeDeTest;
+        var donneeConvertieEnTexte = serialize(donneeDeTest,depthLimit);
+        expect(typeof donneeConvertieEnTexte).toBe('string');
+        console.log(donneeConvertieEnTexte);
+        var donneeRestauree = deserialize(donneeConvertieEnTexte);
+        expect(donneeRestauree).toEqual(temoin);
+        return donneeRestauree;
+}
+function serialisationTestRecurcivite(testValue){
+        var donneeDeTest = testValue;
         var donneeConvertieEnTexte = serialize(donneeDeTest);
         expect(typeof donneeConvertieEnTexte).toBe('string');
         console.log(donneeConvertieEnTexte);
         var donneeRestauree = deserialize(donneeConvertieEnTexte);
-        expect(donneeRestauree).toEqual(temoin);    
         return donneeRestauree;
 }
+
 describe("serialisation / déserialisation", function() {
     it("gère les entiers", function() {
         serialisationTest(5);
@@ -77,10 +86,60 @@ describe("serialisation / déserialisation", function() {
         var tableauFinal = serialisationTest([1,'cinq',[3,2,[escape,null]]]);
         expect(tableauFinal[2][2][0]('"')).toBe(escape('"'));
     });
+    it("gère une limite optionnelle à la profondeur des objets serialisé", function() {
+        serialisationTest([[[[[[[[[[[[5]]]]]]]]]]]]); // sans limite
+        serialisationTest([[[[[[[[[[[[5]]]]]]]]]]]],13); // avec limite suffisente
+        //avec limite à 3
+        var donneeDeTest = [[[[[[[[[[[[5]]]]]]]]]]]];
+        var temoin = donneeDeTest;
+        var donneeConvertieEnTexte = serialize(donneeDeTest,3);
+        expect(typeof donneeConvertieEnTexte).toBe('string');
+        console.log(donneeConvertieEnTexte);
+        var donneeRestauree = deserialize(donneeConvertieEnTexte);
+        expect(donneeRestauree).not.toEqual(temoin);    
+    });
+    it("gère les références circulaire directe", function() {
+        var a = new Array();
+        a.push(a);
+        serialisationTest(a);
+    });
+    
+    it("gère les références circulaire indirecte", function() {
+        //indirecte simple (2ème niveau).
+        
+        var a = new Array();
+        a.push('plop')
+        a.push([a]);
+        var donneeRestauree = serialisationTestRecurcivite(a);
+        expect(donneeRestauree[0]).toEqual('plop');
+        expect(donneeRestauree[1][0][0]).toEqual('plop');
+        
+        // indirecte croisé
+        var a = new Object();
+        a.content = 'osef';
+        var b = new Object();
+        b.content = 'bob';
+        var c = new Object();
+        c.content = 'crash?';
+        a.plus = b;
+        a.moins = c;
+        b.plus = c;
+        b.moins = a;
+        c.plus = a;
+        c.moins = b;
+        serialisationTestRecurcivite(a);
+        serialisationTestRecurcivite(b);
+        serialisationTestRecurcivite(c);
+    });
     it("gère les expression régulière", function() {
         serialisationTest(/^$/gi);
     });
     it("gère les Dates", function() {
         serialisationTest(new Date());
     });
+    /*
+    it("gère les objets du DOM", function() {
+        serialisationTest(window,1);
+    });
+    */
 });

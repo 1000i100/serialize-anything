@@ -1,5 +1,16 @@
 
-function serialize(anything){
+function serialize(anything, depthLimit, breadcrumbRef, seenMap){
+    
+    if (depthLimit===undefined) depthLimit=-1;
+    if (depthLimit===0) return 'depthLimit>reached';
+    // gestion des références circulaires
+    if (breadcrumbRef===undefined) breadcrumbRef='root';
+    if (seenMap===undefined) seenMap=[];    
+    for (var seenRef in seenMap){
+        if(seenMap[seenRef]===anything) return 'reference>'+seenRef;
+    }
+    seenMap[breadcrumbRef]=anything;
+    
     if(anything===null) return 'null>';
     if(anything===undefined) return 'undefined>';
     switch (anything.constructor.name) {
@@ -17,50 +28,85 @@ function serialize(anything){
                 anything = anything.split('function ')[1].split('(')[0];
             }
             return 'Function>'+anything;
-            
         case "Array":
         default: // objets défini par l'utilsiateur et tableaux
             var encodedMembers = [];
-            for (i in anything){
-                encodedMembers.push(i+':'+Base64.encode(serialize(anything[i])));
+            for (var i in anything){
+                encodedMembers.push(i+':'+Base64.encode(serialize(anything[i], depthLimit-1, breadcrumbRef+','+i, seenMap)));
             }
             return anything.constructor.name+'>'+encodedMembers.join(',');
     }
 }
 function deserialize(serializedContent){
-    var typeVal = serializedContent.split('>');
-    var type = typeVal[0];
-    var valeur = serializedContent.substr(serializedContent.indexOf('>')+1);
-    switch (type) {
-        case "null": return null;
-        case "undefined": return undefined;
-        case "Number": return Number(valeur);
-        case "String": return valeur;
-        case "Boolean": return (valeur=='true')?true:false;
-        case "RegExp": return new RegExp( valeur.substring(1, valeur.lastIndexOf('/')), valeur.substring(valeur.lastIndexOf('/')+1) );
-        case "Date":
-            var date = new Date();
-            date.setTime(valeur);
-            return date;
-        case "Function":
-            var func;
-            eval('func = '+valeur);
-            return func;
-        default:
-            var objType;
-            eval('objType = '+type);
-            var obj = new objType();
-            var encodedMembers = valeur.split(',');
-            for (i in encodedMembers){
-                var splittedMember = encodedMembers[i].split(':');
-                var key = splittedMember[0];
-                var value = Base64.decode(splittedMember[1]);
-                obj[key]=deserialize(value);
-            }
-            return obj;
-    }
-}
+    var refList=[];
+    var anything = deserializeExeptRef(serializedContent);
+    
+    //addRef
+    for (var ref in refList){
+        var breadcrumbRef = refList[ref].split(',');
+        breadcrumbRef.shift(); //nous avons déjà l'élément racine
+        var referredTarget = anything;
+        var ref2convert;
+        for (var breadStep in breadcrumbRef){
+            ref2convert = referredTarget;
+            referredTarget = referredTarget[breadcrumbRef[breadStep]];
+        }
+        var hostForceRef = breadcrumbRef[breadStep];
+        var valeur = ref2convert[hostForceRef].substr(ref2convert[hostForceRef].indexOf('>')+1);
 
+        breadcrumbRef = valeur.split(',');
+        breadcrumbRef.shift(); //nous avons déjà l'élément racine
+        referredTarget = anything;
+        for (breadStep in breadcrumbRef){
+            referredTarget = referredTarget[breadcrumbRef[breadStep]];
+        }
+        ref2convert[hostForceRef] = referredTarget;
+    }
+    return anything;
+    
+    function deserializeExeptRef(serializedContent, breadcrumbRef){
+        if (breadcrumbRef===undefined) breadcrumbRef='root';
+        var typeVal = serializedContent.split('>');
+        var type = typeVal[0];
+        var valeur = serializedContent.substr(serializedContent.indexOf('>')+1);
+        switch (type) {
+            case "null": return null;
+            case "depthLimit":
+            case "undefined": return undefined;
+            case "Number": return Number(valeur);
+            case "String": return valeur;
+            case "Boolean": return (valeur=='true')?true:false;
+            case "RegExp": return new RegExp( valeur.substring(1, valeur.lastIndexOf('/')), valeur.substring(valeur.lastIndexOf('/')+1) );
+            case "Date":
+                var date = new Date();
+                date.setTime(valeur);
+                return date;
+            case "Function":
+                var func;
+                eval('func = '+valeur);
+                return func;
+            case "reference":
+                refList.push(breadcrumbRef);
+                return serializedContent;
+            default:
+                var objType;
+                eval('objType = '+type);
+                var obj = new objType();
+                var encodedMembers = valeur.split(',');
+                for (i in encodedMembers){
+                    var splittedMember = encodedMembers[i].split(':');
+                    var key = splittedMember[0];
+                    var value = Base64.decode(splittedMember[1]);
+                    if(value === 'circularRef>parent') obj[key] = obj;
+                    else obj[key]=deserializeExeptRef(value, breadcrumbRef+','+key);
+                }
+                return obj;
+        }
+    }
+    if (breadcrumbRef===undefined) breadcrumbRef='root';
+    if (refList===undefined) refList=[];    
+    
+}
 
 
 

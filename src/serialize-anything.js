@@ -1,20 +1,25 @@
 
 function serialize(anything){
-    switch (typeof anything) {
-        case "number": return 'num>'+anything.toString();
-        case "string": return 'str>'+anything.toString();
-        case "boolean": return 'bool>'+anything.toString();
-        case "undefined": return 'undef>';
-        case "function": 
+    if(anything===null) return 'null>';
+    if(anything===undefined) return 'undefined>';
+    switch (anything.constructor.name) {
+        case "Number":
+        case "String":
+        case "Boolean":
+        case "RegExp":
+            return anything.constructor.name+'>'+anything.toString();
+        case "Date":
+            return anything.constructor.name+'>'+anything.getTime();
+        case "Function": 
             anything = anything.toString();
              if( anything.indexOf('[native code]') > -1 ){
                 // pour les fonctions native, le nom suffit.
                 anything = anything.split('function ')[1].split('(')[0];
             }
-            return 'func>'+anything;
-        case "object":
-        default:
-            if(anything===null) return 'null>';
+            return 'Function>'+anything;
+            
+        case "Array":
+        default: // objets défini par l'utilsiateur et tableaux
             var encodedMembers = [];
             for (i in anything){
                 encodedMembers.push(i+':'+Base64.encode(serialize(anything[i])));
@@ -27,16 +32,20 @@ function deserialize(serializedContent){
     var type = typeVal[0];
     var valeur = serializedContent.substr(serializedContent.indexOf('>')+1);
     switch (type) {
-        case "num": return Number(valeur);
-        case "str": return valeur;
-        case "bool": return (valeur=='true')?true:false;
-        case "undef": return undefined;
         case "null": return null;
-        case "func":
+        case "undefined": return undefined;
+        case "Number": return Number(valeur);
+        case "String": return valeur;
+        case "Boolean": return (valeur=='true')?true:false;
+        case "RegExp": return new RegExp( valeur.substring(1, valeur.lastIndexOf('/')), valeur.substring(valeur.lastIndexOf('/')+1) );
+        case "Date":
+            var date = new Date();
+            date.setTime(valeur);
+            return date;
+        case "Function":
             var func;
             eval('func = '+valeur);
             return func;
-        case "obj":
         default:
             var objType;
             eval('objType = '+type);

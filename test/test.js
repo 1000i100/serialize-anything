@@ -19,15 +19,8 @@ function serialisationTest(testValue){
         expect(typeof donneeConvertieEnTexte).toBe('string');
         console.log(donneeConvertieEnTexte);
         var donneeRestauree = deserialize(donneeConvertieEnTexte);
-        expect(donneeRestauree).toBe(temoin);    
-}
-function serialisationTestFonction(testFunction, params){
-        var donneeDeTest = testFunction;
-        var temoin = donneeDeTest;
-        var donneeConvertieEnTexte = serialize(donneeDeTest);
-        expect(typeof donneeConvertieEnTexte).toBe('string');
-        var donneeRestauree = deserialize(donneeConvertieEnTexte);
-        expect(donneeRestauree(params)).toBe(temoin(params));    
+        expect(donneeRestauree).toEqual(temoin);    
+        return donneeRestauree;
 }
 describe("serialisation / déserialisation", function() {
     it("gère les entiers", function() {
@@ -52,6 +45,14 @@ describe("serialisation / déserialisation", function() {
     it("gère les null", function() {
         serialisationTest(null);
     });
+    function serialisationTestFonction(testFunction, params){
+            var donneeDeTest = testFunction;
+            var temoin = donneeDeTest;
+            var donneeConvertieEnTexte = serialize(donneeDeTest);
+            expect(typeof donneeConvertieEnTexte).toBe('string');
+            var donneeRestauree = deserialize(donneeConvertieEnTexte);
+            expect(donneeRestauree(params)).toBe(temoin(params));    
+    }
     it("gère les fonctions utilisateurs", function() {
         serialisationTestFonction(function(){return 5;});
         function incrementeur(num){return num+1;}
@@ -63,8 +64,6 @@ describe("serialisation / déserialisation", function() {
         // mais pas les methode statique native
         //serialisationTestFonction(Math.round,0.5);
     });
-    
-    //FIXME: corriger les test pour les tableaux
     it("gère les tableaux simple", function() {
         serialisationTest([1,'cinq',null]);
     });
@@ -75,9 +74,13 @@ describe("serialisation / déserialisation", function() {
         serialisationTest(tableauAssociatif);
     });
     it("gère les tableaux imbriqué/multidimensionnel/complexe", function() {
-        serialisationTest([1,'cinq',[3,2,[function(){return 5;},escape,null]]]);
+        var tableauFinal = serialisationTest([1,'cinq',[3,2,[escape,null]]]);
+        expect(tableauFinal[2][2][0]('"')).toBe(escape('"'));
     });
     it("gère les expression régulière", function() {
         serialisationTest(/^$/gi);
+    });
+    it("gère les Dates", function() {
+        serialisationTest(new Date());
     });
 });

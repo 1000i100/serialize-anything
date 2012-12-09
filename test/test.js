@@ -137,9 +137,15 @@ describe("serialisation / déserialisation", function() {
     it("gère les Dates", function() {
         serialisationTest(new Date());
     });
-    /*
-    it("gère les objets du DOM", function() {
-        serialisationTest(window,1);
-    });
-    */
+    //it("gère les objets du DOM", function() {
+        //XMLSerializer
+        // DOM infosets
+        //serialisationTest(document, 2);
+        //serialisationTest(document.body, 2);
+    //}); 
+    //it("gère les objets jQuery", function() {
+        // aSerialiser.selector 
+        //serialisationTest(document, 2);
+        //serialisationTest(document.body, 2);
+    //}); 
 });

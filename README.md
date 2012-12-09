@@ -20,4 +20,5 @@ Le script à été conçu dans l'optique de pouvoir stocker des objets dynamique
 les méthodes statique native ne sont pas serialisé ni déserialisé correctement. ex : Math.round
 
 ## ToDo
+Gérer la serialisation d'objet DOM, par valeur et une pseudo sérialisation par référence
 

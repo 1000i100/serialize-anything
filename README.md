@@ -22,3 +22,5 @@ les méthodes statique native ne sont pas serialisé ni déserialisé correcteme
 ## ToDo
 Gérer la serialisation d'objet DOM, par valeur et une pseudo sérialisation par référence
 
+## Test unitaires
+http://gammanu.github.com/serialize-anything/test/
